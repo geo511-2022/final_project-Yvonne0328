@@ -1,7 +1,7 @@
 ---
-title: "My Final Project Template"
-author: Your name here
-subtitle: Subtitle here if desired
+title: "What does the fire say"
+author: Yvonne Huang
+subtitle: Emotional changes in wildfires
 ---
 
 # Introduction
