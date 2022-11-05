@@ -10,11 +10,10 @@ library(tidyr)
 library(ggplot2)
 library(reshape2)
 # Change consumer_key, consume_secret, access_token, and 
-# access_secret based on your own keys
 
 
 # read data
-data <- read.csv("data/Twitter_disaster_1025_1103.csv")
+data <- read.csv("data/Twitter_disaster_1025_1103_K.csv")
 
 # word clouds
 library(wordcloud)
@@ -181,3 +180,4 @@ ggplot(trend, aes(x= factor(names,level = c("before", "during", "after")), SCORE
   ggtitle("social resilience")+
   theme(plot.title = element_text(hjust = 0.5))
 dev.off()
+
