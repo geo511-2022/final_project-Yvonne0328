@@ -34,7 +34,7 @@ save_as_csv(wildfire_smoke_ALL, "wildfire_smoke_ALL.csv")
 LA_w <- read.csv("data/wildfire_LA.csv")
 LA_ws <- read.csv("data/wildfire_smoke_LA.csv")
 ALL_w <- read.csv("data/wildfire_ALL.csv")
-AL_ws <- read.csv("data/wildfire_smoke_ALL.csv")
+ALL_ws <- read.csv("data/wildfire_smoke_ALL.csv")
 
 # word clouds
 library(wordcloud)
@@ -43,29 +43,80 @@ library(wordcloud2)
 library(tm)
 
 text_LA_w <- LA_w$text
-
 docs_LA_w <- Corpus(VectorSource(text_LA_w))
-
 docs_LA_w<- docs_LA_w %>%
   tm_map(removeNumbers) %>%
   tm_map(removePunctuation) %>%
   tm_map(stripWhitespace)
 docs_LA_w <- tm_map(docs_LA_w, content_transformer(tolower))
 docs_LA_w <- tm_map(docs_LA_w, removeWords, stopwords("english"))
-
-
 dtm <- TermDocumentMatrix(docs_LA_w) 
 matrix <- as.matrix(dtm) 
 words <- sort(rowSums(matrix),decreasing=TRUE) 
 df_LA_w <- data.frame(word = names(words),freq=words)
-
+png(filename = "LA_w.png")
 wordcloud(words = df_LA_w$word, freq = df_LA_w$freq, min.freq = 1,
           max.words=200, random.order=FALSE, rot.per=0.35,
           colors=brewer.pal(8, "Dark2"))
+dev.off()
 
 
 
 
 text_LA_ws <- LA_ws$text
+docs_LA_ws <- Corpus(VectorSource(text_LA_ws))
+docs_LA_ws<- docs_LA_ws %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace)
+docs_LA_ws <- tm_map(docs_LA_ws, content_transformer(tolower))
+docs_LA_ws <- tm_map(docs_LA_ws, removeWords, stopwords("english"))
+dtm <- TermDocumentMatrix(docs_LA_ws) 
+matrix <- as.matrix(dtm) 
+words <- sort(rowSums(matrix),decreasing=TRUE) 
+df_LA_ws <- data.frame(word = names(words),freq=words)
+png(filename = "LA_ws.png")
+wordcloud(words = df_LA_ws$word, freq = df_LA_ws$freq, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35,
+          colors=brewer.pal(8, "Dark2"))
+dev.off()
+
 text_ALL_w <- ALL_w$text
-text_ALL_ws <- ALL_WS$text
+docs_ALL_w <- Corpus(VectorSource(text_ALL_w))
+docs_ALL_w<- docs_ALL_w %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace)
+docs_ALL_w <- tm_map(docs_ALL_w, content_transformer(tolower))
+docs_ALL_w <- tm_map(docs_ALL_w, removeWords, stopwords("english"))
+dtm <- TermDocumentMatrix(docs_ALL_w) 
+matrix <- as.matrix(dtm) 
+words <- sort(rowSums(matrix),decreasing=TRUE) 
+df_ALL_w <- data.frame(word = names(words),freq=words)
+png(filename = "ALL_w.png")
+wordcloud(words = df_ALL_w$word, freq = df_ALL_w$freq, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35,
+          colors=brewer.pal(8, "Dark2"))
+dev.off()
+
+
+text_ALL_ws <- ALL_ws$text
+docs_ALL_ws <- Corpus(VectorSource(text_ALL_ws))
+docs_ALL_ws<- docs_ALL_ws %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace)
+docs_ALL_ws <- tm_map(docs_ALL_ws, content_transformer(tolower))
+docs_ALL_ws <- tm_map(docs_ALL_ws, removeWords, stopwords("english"))
+dtm <- TermDocumentMatrix(docs_ALL_ws) 
+matrix <- as.matrix(dtm) 
+words <- sort(rowSums(matrix),decreasing=TRUE) 
+df_ALL_ws <- data.frame(word = names(words),freq=words)
+png(filename = "ALL_ws.png")
+wordcloud(words = df_ALL_ws$word, freq = df_ALL_ws$freq, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35,
+          colors=brewer.pal(8, "Dark2"))
+dev.off()
+
+
+
