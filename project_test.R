@@ -38,7 +38,7 @@ for (i in steps){
   matrix <- as.matrix(dtm) 
   words <- sort(rowSums(matrix),decreasing=TRUE) 
   df_data <- data.frame(word = names(words),freq=words) %>%
-    filter(word != "disaster" & word != "…" & word != "korea")
+    filter(word != "korea" & word != "…" & word != "korea")
 
   
   png(filename = paste0("WC", i, ".png"), width = 1024, height = 1024, units = "px")
