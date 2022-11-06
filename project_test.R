@@ -9,11 +9,24 @@ library(stringr)
 library(tidyr)
 library(ggplot2)
 library(reshape2)
-# Change consumer_key, consume_secret, access_token, and 
+library(spData)
+library(sf)
+library(tidyverse)
+library(maps)
+
 
 
 # read data
-data <- read.csv("data/Twitter_disaster_1025_1103_K.csv")
+data <- read.csv("data/Twitter_disaster_1025_1103_K_1106.csv")
+point <- st_as_sf(data, coords = c("longitude", "latitude"), crs = 4326)
+data(world.cities)
+seoul <- world.cities %>%
+  filter(name == 'Seoul')%>%
+  st_as_sf(coords = c("long", "lat"), crs = 4326)%>%
+  st_buffer(dist = 120000)
+
+data <- st_intersection(point, seoul)
+
 
 # word clouds
 library(wordcloud)
@@ -39,7 +52,7 @@ for (i in steps){
   words <- sort(rowSums(matrix),decreasing=TRUE) 
   df_data <- data.frame(word = names(words),freq=words) %>%
     filter(word != "korea" & word != "…" & word != "korea")
-
+  
   
   png(filename = paste0("WC", i, ".png"), width = 1024, height = 1024, units = "px")
   wordcloud(words = df_data$word, freq = df_data$freq, min.freq = 1,
@@ -56,7 +69,7 @@ for (i in steps){
 # get_sentiments("nrc")
 
 #sentiment resilience
- #BING
+#BING
 png(filename = "bing_before.png",width = 1024, height = 1024, units = "px")
 dfbefore %>%
   inner_join(get_sentiments("bing")) %>%
@@ -99,7 +112,7 @@ dfafter %>%
        y = NULL)
 dev.off()
 
- #NRC
+#NRC
 png(filename = "nrc_before.png", width = 1024, height = 1024, units = "px")
 dfbefore %>%
   inner_join(get_sentiments("nrc")) %>%
@@ -154,7 +167,7 @@ dfafter %>%
        y = NULL)
 dev.off()
 
- #afinn
+#afinn
 SCORE <- c()
 dfbefore <- dfbefore %>%
   inner_join(get_sentiments("afinn")) %>%
