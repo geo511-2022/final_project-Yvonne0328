@@ -84,7 +84,7 @@ seoul <- world.cities %>%
 data <- st_intersection(point, seoul)
 ```
  
-Finally, we introduced sentiment dictionaries.
+Finally, we introduced sentiment dictionaries. 
 ```{r, message=F, warning=F}
 afinn = get_sentiments("afinn")
 bing = get_sentiments("bing")
