@@ -64,15 +64,15 @@ for (i in steps){
   
 }
 
-# get_sentiments("afinn")
-# get_sentiments("bing")
-# get_sentiments("nrc")
+afinn = get_sentiments("afinn")
+bing = get_sentiments("bing")
+nrc = get_sentiments("nrc")
 
 #sentiment resilience
 #BING
 png(filename = "bing_before.png",width = 1024, height = 1024, units = "px")
 dfbefore %>%
-  inner_join(get_sentiments("bing")) %>%
+  inner_join(bing) %>%
   group_by(sentiment) %>%
   slice_max(freq, n = 10) %>% 
   ungroup() %>%
@@ -86,7 +86,7 @@ dev.off()
 
 png(filename = "bing_during.png",width = 1024, height = 1024, units = "px")
 dfduring %>%
-  inner_join(get_sentiments("bing")) %>%
+  inner_join(bing) %>%
   group_by(sentiment) %>%
   slice_max(freq, n = 10) %>% 
   ungroup() %>%
@@ -100,7 +100,7 @@ dev.off()
 
 png(filename = "bing_after.png",width = 1024, height = 1024, units = "px")
 dfafter %>%
-  inner_join(get_sentiments("bing")) %>%
+  inner_join(bing) %>%
   group_by(sentiment) %>%
   slice_max(freq, n = 10) %>% 
   ungroup() %>%
@@ -115,7 +115,7 @@ dev.off()
 #NRC
 png(filename = "nrc_before.png", width = 1024, height = 1024, units = "px")
 dfbefore %>%
-  inner_join(get_sentiments("nrc")) %>%
+  inner_join(nrc) %>%
   mutate(temp = freq) %>%
   mutate(temp2 = sentiment) %>%
   pivot_wider(names_from = temp2, values_from = temp, values_fill = 0) %>% 
@@ -133,7 +133,7 @@ dev.off()
 
 png(filename = "nrc_during.png", width = 1024, height = 1024, units = "px")
 dfduring %>%
-  inner_join(get_sentiments("nrc")) %>%
+  inner_join(nrc) %>%
   mutate(temp = freq) %>%
   mutate(temp2 = sentiment) %>%
   pivot_wider(names_from = temp2, values_from = temp, values_fill = 0) %>% 
@@ -151,7 +151,7 @@ dev.off()
 
 png(filename = "nrc_after.png", width = 1024, height = 1024, units = "px")
 dfafter %>%
-  inner_join(get_sentiments("nrc")) %>%
+  inner_join(nrc) %>%
   mutate(temp = freq) %>%
   mutate(temp2 = sentiment) %>%
   pivot_wider(names_from = temp2, values_from = temp, values_fill = 0) %>% 
@@ -170,13 +170,13 @@ dev.off()
 #afinn
 SCORE <- c()
 dfbefore <- dfbefore %>%
-  inner_join(get_sentiments("afinn")) %>%
+  inner_join(afinn) %>%
   mutate(score = freq*value)
 dfduring <- dfduring %>%
-  inner_join(get_sentiments("afinn")) %>%
+  inner_join(afinn) %>%
   mutate(score = freq*value)
 dfafter <- dfafter %>%
-  inner_join(get_sentiments("afinn")) %>%
+  inner_join(afinn) %>%
   mutate(score = freq*value)
 
 SCORE  <- c(sum(dfbefore$score), sum(dfduring$score), sum(dfafter$score))

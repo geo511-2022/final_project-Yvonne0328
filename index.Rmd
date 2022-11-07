@@ -6,92 +6,269 @@ subtitle: Emotional changes -- stampede in Itaewon
 
 # Introduction
 
-[~ 200 words]
-
-Clearly stated background and questions / hypotheses / problems being addressed. Sets up the analysis in an interesting and compelling way.
+Disasters, such as storms, wildfires, and crowd stampede, occur and threaten human's physical and mental health. It is important to estimate social resilience because it represents population mental health. Therefore, understanding how people react and how their emotion changes toward disasters would be a crucial factor when analyzing social resilience. Twitter API allow users to access tweets within a week. Therefore, in this project, we collected tweets from three timeframes: before, during, and after disaster happened to analyze social resilience. To evaluate social resilience, Twitter data is used to produce social resilience index and analyze population emotion changes. Each tweet is spliced into words before sentiment analysis, and spaces, numbers, and special characters were removed. Emotion dictionaries provide sentiment emotion interval, such as positive, negative, and neutral, sentiment score, and emotions within each word. After data processing, tweets from each timeframe are summarize and provided a total sentiment score which represents the emotion level in each timeframe. The trend of sentiment emotion score changes is the symbol of social resilience. This project focused on analyzing people's emotional changes toward a crowd stampede incident in Itaewon, Seoul, South Korea on October 29, 2022. 
 
 # Materials and methods
-
-[~ 200 words]
-
-Narrative: Clear narrative description of the data sources and methods. Includes data from at least two sources that were integrated / merged in R.
-
-Code: The code associated with the project is well organized and easy to follow. Demonstrates mastery of R graphics and functions.
-
-Data: The underlying data are publicly accessible via the web and downloaded/accessed within the Rmd script. If you want to use your own data, you must make it available on a website (e.g. Figshare) so that others are able to re-run your code.
-
-You can do bullets like this:
-
-* The first most important thing
-* The second most important thing
-* The third most important thing
-
-You can do numbers like this:
-
-1. The first most important thing
-2. The second most important thing
-3. The third most important thing
-
-See [http://rmarkdown.rstudio.com/](http://rmarkdown.rstudio.com/) for all the amazing things you can do.
+## Data
+* Twitter API: TWitter allows every Twitter user to access tweets from the world within 1 week. Because accessing data requires user token and secret, this data is stored as .csv file to protect user's privacy. we collect data from Oct. 24 to Nov. 03. nearby Korea and Japan.
+* City coordinates: maps database provide the coordinate of each city, it also includes the information of name and populations.
+* Sentiment dictionaries:tidytext library provide the dictionaries with emotion information. bing, afinn, and nrc are used in this project.
 
 
-Here's my first code chunk.
-```{r}
-1+2
-```
-
-Load any required packages in a code chunk (you may need to install some packages):
-
+Here are the libraries used in this project.
 ```{r, message=F, warning=F}
+library(twitteR) 
+library(rtweet)
+library(dplyr)
+library(tidytext)
+library(textdata)
+library(janeaustenr)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(ggplot2)
+library(reshape2)
+library(spData)
+library(sf)
 library(tidyverse)
-library(leaflet)
-library(kableExtra)
-knitr::opts_chunk$set(cache=TRUE)  # cache the results for quick compiling
+library(maps)
+library(wordcloud)
+library(RColorBrewer)
+library(wordcloud2)
+library(tm)
+knitr::opts_chunk$set(cache=TRUE)
 ```
 
 ## Download and clean all required data
-```{r}
-n=20
-data=data.frame(x=runif(n,-180,180),
-                y=runif(n,-60,60),
-                size = runif(n, 5, 20),
-                category = factor(
-                  sample(letters[1:5], n, replace = TRUE)
-                  ),
-                value = rnorm(n))
+
+Twitter data is already saved in "data" file, however, here is the example code demonstrate data downloading. To analyze sentiment changes, we collected tweets from three timeframes: before, during, and after disaster happened. We used the keyword "korea" to collect the tweets mention Korea.
+
+```{r, message=F, warning=F, eval = FALSE}
+consumer_key <- "XXX"
+consumer_secret <-"XXX"
+access_token <- "XXX"
+access_secret <- "XXX" 
+setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret)
+
+# data accessing
+loc = "35.7745, 123.3780, 200mi"
+
+L0 <- searchTwitter("korea", n = 1000, lang = "en", geocode = loc,
+                    since = "2022-10-24", until = "2022-10-29")
+L1 <- searchTwitter("korea", n = 1000, lang = "en", geocode = loc,
+                    since = "2022-10-29", until = "2022-10-31")
+L2 <- searchTwitter("korea", n = 1000, lang = "en", geocode = loc,
+                    since = "2022-11-01", until = "2022-11-03")
+
+D0 <- twListToDF(L0)%>%
+  mutate(timeline = "before")
+D1 <- twListToDF(L1) %>%
+  mutate(timeline = "during")
+D2 <- twListToDF(L2) %>%
+  mutate(timeline = "after")
+
+data <- rbind(D0, D1, D2)
+save_as_csv(data, "Twitter_disaster_1025_1103_K.csv")
 ```
 
-```{r, results='asis'}
-data %>% 
-  slice(1:10) %>% #show only 1:n rows
-  kable(digits=2,align="c")%>% #make table and round to two digits
-  kable_styling(bootstrap_options = 
-                  c("striped", "hover", "condensed", "responsive")) #apply other formatting
+A csv file (Twitter data) and Seoul location is read. Tweets locate nearby Seoul within 120 km are remained.
+```{r, message=F, warning=F}
+data <- read.csv("data/Twitter_disaster_1025_1103_K_1106.csv")
+point <- st_as_sf(data, coords = c("longitude", "latitude"), crs = 4326)
+data(world.cities)
+seoul <- world.cities %>%
+  filter(name == 'Seoul')%>%
+  st_as_sf(coords = c("long", "lat"), crs = 4326)%>%
+  st_buffer(dist = 120000)
+
+data <- st_intersection(point, seoul)
+```
+ 
+Finally, we introduced sentiment dictionaries.
+```{r, message=F, warning=F}
+afinn = get_sentiments("afinn")
+bing = get_sentiments("bing")
+nrc = get_sentiments("nrc")
 ```
 
-Add any additional processing steps here.
+
+## Data processing
+
+To under stand topic, keywords, and sentiment changes in tweets, tweets are sliced into words, and the frequency of each word using is calculated. Numbers, special characters, and spaces are removed from the analysis. Also, because all the tweets mention "korea", we removed the word "korea" from analysis.
+```{r, message=F, warning=F}
+steps <- c("before", "during", "after")
+
+for (i in steps){
+  data_temp <- data %>%
+    filter(timeline == i)
+  text_data <- data_temp$text
+  docs_data <- Corpus(VectorSource(text_data))
+  docs_data<- docs_data %>%
+    tm_map(removeNumbers) %>%
+    tm_map(removePunctuation) %>%
+    tm_map(stripWhitespace)
+  docs_data <- tm_map(docs_data, content_transformer(tolower))
+  docs_data <- tm_map(docs_data, removeWords, stopwords("english"))
+  dtm <- TermDocumentMatrix(docs_data) 
+  matrix <- as.matrix(dtm) 
+  words <- sort(rowSums(matrix),decreasing=TRUE) 
+  df_data <- data.frame(word = names(words),freq=words) %>%
+    filter(word != "korea" & word != "…" & word != "korea")
+  assign(paste0("df", i), df_data)
+  }
+```
+
 
 # Results
+I am tired so I will write this part next time.
 
-[~200 words]
+```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Word cloud before stampede"}
+wordcloud(words = dfbefore$word,
+          freq = dfbefore$freq, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35,
+          colors=brewer.pal(8, "Dark2"))
+```
 
-Tables and figures (maps and other graphics) are carefully planned to convey the results of your analysis. Intense exploration and evidence of many trials and failures. The author looked at the data in many different ways before coming to the final presentation of the data.
+```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Word cloud during stampede"}
+wordcloud(words = dfduring$word,
+          freq = dfduring$freq, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35,
+          colors=brewer.pal(8, "Dark2"))
+```
 
-Show tables, plots, etc. and describe them.
+```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Word cloud during stampede"}
+wordcloud(words = dfafter$word,
+          freq = dfafter$freq, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35,
+          colors=brewer.pal(8, "Dark2"))
+```
 
-```{r, fig.width=6, fig.height=3, fig.cap="Map of completely random data"}
-m <- leaflet(data) %>% 
-  addTiles() %>% 
-  addCircleMarkers(~x, ~y, radius = ~size,color = ~as.factor(category)) %>% 
-  addPopups(~x[2], ~y[2], "Random popup")
-m  # a map with the default OSM tile layer
+I mean at least I have the plots.
+
+```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Positive and negative words used before stampede"}
+dfbefore %>%
+  inner_join(bing) %>%
+  group_by(sentiment) %>%
+  slice_max(freq, n = 10) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, freq)) %>%
+  ggplot(aes(freq, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
+```
+
+```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Positive and negative words used during stampede"}
+dfduring %>%
+  inner_join(bing) %>%
+  group_by(sentiment) %>%
+  slice_max(freq, n = 10) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, freq)) %>%
+  ggplot(aes(freq, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
+```
+
+```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Positive and negative words used after stampede"}
+dfafter %>%
+  inner_join(bing) %>%
+  group_by(sentiment) %>%
+  slice_max(freq, n = 10) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, freq)) %>%
+  ggplot(aes(freq, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
+```
+
+OK we are here.
+
+```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Sentiment before stampede"}
+dfbefore %>%
+  inner_join(nrc) %>%
+  mutate(temp = freq) %>%
+  mutate(temp2 = sentiment) %>%
+  pivot_wider(names_from = temp2, values_from = temp, values_fill = 0) %>% 
+  mutate(score = positive - negative) %>%
+  group_by(sentiment) %>%
+  slice_max(order_by = freq, n = 10) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, freq)) %>%
+  ggplot(aes(freq, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
+```
+
+```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Sentiment before stampede"}
+dfduring %>%
+  inner_join(nrc) %>%
+  mutate(temp = freq) %>%
+  mutate(temp2 = sentiment) %>%
+  pivot_wider(names_from = temp2, values_from = temp, values_fill = 0) %>% 
+  mutate(score = positive - negative) %>%
+  group_by(sentiment) %>%
+  slice_max(order_by = freq, n = 10) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, freq)) %>%
+  ggplot(aes(freq, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
+```
+
+```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Sentiment before stampede"}
+dfafter %>%
+  inner_join(nrc) %>%
+  mutate(temp = freq) %>%
+  mutate(temp2 = sentiment) %>%
+  pivot_wider(names_from = temp2, values_from = temp, values_fill = 0) %>% 
+  mutate(score = positive - negative) %>%
+  group_by(sentiment) %>%
+  slice_max(order_by = freq, n = 10) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, freq)) %>%
+  ggplot(aes(freq, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
 ```
 
 
-```{r}
-data %>% 
-  ggplot(aes(x=x,y=y,col=category))+
-  geom_point()
+Oh wait we have more?!!!
+
+```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Social resilience"}
+dfbefore <- dfbefore %>%
+  inner_join(afinn) %>%
+  mutate(score = freq*value)
+dfduring <- dfduring %>%
+  inner_join(afinn) %>%
+  mutate(score = freq*value)
+dfafter <- dfafter %>%
+  inner_join(afinn) %>%
+  mutate(score = freq*value)
+
+SCORE  <- c(sum(dfbefore$score), sum(dfduring$score), sum(dfafter$score))
+timeframe <- c("-1", "0", "1")
+names <- c("before", "during", "after")
+trend <- data.frame(names,timeframe, SCORE)
+
+ggplot(trend, aes(x= factor(names,level = c("before", "during", "after")), SCORE, group = 1))+
+  geom_line(arrow = arrow())+
+  geom_point()+
+  xlab("timeline")+
+  ylab("emotion score")+
+  ggtitle("social resilience")+
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 # Conclusions
@@ -101,5 +278,7 @@ data %>%
 Clear summary adequately describing the results and putting them in context. Discussion of further questions and ways to continue investigation.
 
 # References
-
-All sources are cited in a consistent manner
+* https://www.rdocumentation.org/packages/maps/versions/3.4.0/topics/world.cities
+* http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know
+* https://www.tidytextmining.com/sentiment.html
+* https://posit.co/blog/the-r-markdown-cheat-sheet/
