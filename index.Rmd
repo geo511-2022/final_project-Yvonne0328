@@ -69,6 +69,11 @@ D2 <- twListToDF(L2) %>%
 
 data <- rbind(D0, D1, D2)
 save_as_csv(data, "Twitter_disaster_1025_1103_K.csv")
+
+afinn = get_sentiments("afinn")
+nrc = get_sentiments("nrc")
+save_as_csv(afinn, "data/affin.csv")
+save_as_csv(nrc, "data/nrc.csv")
 ```
 
 A csv file (Twitter data) and Seoul location is read. Tweets locate nearby Seoul within 120 km are remained.
@@ -86,9 +91,8 @@ data <- st_intersection(point, seoul)
  
 Finally, we introduced sentiment dictionaries. 
 ```{r, message=F, warning=F}
-afinn = get_sentiments("afinn")
-bing = get_sentiments("bing")
-nrc = get_sentiments("nrc")
+afinn = read.csv("data/afinn.csv")
+nrc = read.csv("data/nrc.csv")
 ```
 
 
@@ -143,49 +147,6 @@ wordcloud(words = dfafter$word,
           colors=brewer.pal(8, "Dark2"))
 ```
 
-I mean at least I have the plots.
-
-```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Positive and negative words used before stampede"}
-dfbefore %>%
-  inner_join(bing) %>%
-  group_by(sentiment) %>%
-  slice_max(freq, n = 10) %>% 
-  ungroup() %>%
-  mutate(word = reorder(word, freq)) %>%
-  ggplot(aes(freq, word, fill = sentiment)) +
-  geom_col(show.legend = FALSE) +
-  facet_wrap(~sentiment, scales = "free_y") +
-  labs(x = "Contribution to sentiment",
-       y = NULL)
-```
-
-```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Positive and negative words used during stampede"}
-dfduring %>%
-  inner_join(bing) %>%
-  group_by(sentiment) %>%
-  slice_max(freq, n = 10) %>% 
-  ungroup() %>%
-  mutate(word = reorder(word, freq)) %>%
-  ggplot(aes(freq, word, fill = sentiment)) +
-  geom_col(show.legend = FALSE) +
-  facet_wrap(~sentiment, scales = "free_y") +
-  labs(x = "Contribution to sentiment",
-       y = NULL)
-```
-
-```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Positive and negative words used after stampede"}
-dfafter %>%
-  inner_join(bing) %>%
-  group_by(sentiment) %>%
-  slice_max(freq, n = 10) %>% 
-  ungroup() %>%
-  mutate(word = reorder(word, freq)) %>%
-  ggplot(aes(freq, word, fill = sentiment)) +
-  geom_col(show.legend = FALSE) +
-  facet_wrap(~sentiment, scales = "free_y") +
-  labs(x = "Contribution to sentiment",
-       y = NULL)
-```
 
 OK we are here.
 
