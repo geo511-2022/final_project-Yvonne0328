@@ -14,10 +14,9 @@ library(sf)
 library(tidyverse)
 library(maps)
 
+# access_secret based on your own keys
 
 
-# read data
-data <- read.csv("data/Twitter_disaster_1025_1103_K_1106.csv")
 point <- st_as_sf(data, coords = c("longitude", "latitude"), crs = 4326)
 data(world.cities)
 seoul <- world.cities %>%
@@ -34,7 +33,7 @@ library(RColorBrewer)
 library(wordcloud2)
 library(tm)
 
-steps <- c("before", "during", "after")
+steps <- c("before", "during", "after", "")
 
 for (i in steps){
   data_temp <- data %>%
@@ -67,6 +66,9 @@ for (i in steps){
 afinn = get_sentiments("afinn")
 bing = get_sentiments("bing")
 nrc = get_sentiments("nrc")
+save_as_csv(afinn, "data/afinn.csv")
+save_as_csv(nrc, "data/nrc.csv")
+
 
 #sentiment resilience
 #BING

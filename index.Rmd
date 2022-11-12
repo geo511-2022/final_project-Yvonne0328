@@ -6,13 +6,13 @@ subtitle: Emotional changes -- stampede in Itaewon
 
 # Introduction
 
-Disasters, such as storms, wildfires, and crowd stampede, occur and threaten human's physical and mental health. It is important to estimate social resilience because it represents population mental health. Therefore, understanding how people react and how their emotion changes toward disasters would be a crucial factor when analyzing social resilience. Twitter API allow users to access tweets within a week. Therefore, in this project, we collected tweets from three timeframes: before, during, and after disaster happened to analyze social resilience. To evaluate social resilience, Twitter data is used to produce social resilience index and analyze population emotion changes in a lexicon based sentiment analysis, which means that the categorizing is based on sentiment dictionaries. Emotion dictionaries provide sentiment emotion interval, such as positive, negative, and neutral, sentiment score, and emotions within each word. After data processing, tweets from each timeframe are summarize and provided a total sentiment score which represents the emotion level in each timeframe. The trend of sentiment emotion score changes is the symbol of social resilience. This project focused on analyzing people's emotional changes toward a crowd stampede incident in Itaewon, Seoul, South Korea on October 29, 2022. 
+Disasters, such as storms, wildfires, and crowd stampede, occur and threaten human's physical and mental health. It is important to estimate social resilience because it represents population mental health. Therefore, understanding how people react and how their emotion changes toward disasters would be a crucial factor when analyzing social resilience. Twitter API allow users to access tweets within a week. Therefore, in this project, we collected tweets from different time frames, including before, during, and after disaster happened. To evaluate social resilience, Twitter data is used to produce social resilience index and analyze population emotion changes in a lexicon based sentiment analysis, which means that the categorizing is based on sentiment dictionaries. The trend of sentiment emotion score changes is the symbol of social resilience. This project focused on analyzing people's emotional changes toward a crowd stampede incident in Itaewon, Seoul, South Korea on October 29, 2022. 
 
 # Materials and methods
 ## Data
-* Twitter API: TWitter allows every Twitter user to access tweets from the world within 1 week. Because accessing data requires user token and secret, this data is stored as .csv file to protect user's privacy. we collect data from Oct. 24 to Nov. 03. nearby Korea and Japan.
+* Twitter API: TWitter allows every Twitter user to access tweets from the world within 1 week. Because accessing data requires user token and secret, this data is stored as .csv file to protect user's privacy. we collect data from Oct. 24 to Nov. 10. nearby Korea and Japan.
 * City coordinates: maps database provide the coordinate of each city, it also includes the information of name and populations.
-* Sentiment dictionaries:tidytext library provide the dictionaries with emotion information. bing, afinn, and nrc are used in this project.
+* Sentiment dictionaries:tidytext library provide the dictionaries with emotion information. *afinn*, and *nrc* are used in this project.
 
 
 Here are the libraries used in this project.
@@ -59,6 +59,11 @@ L1 <- searchTwitter("korea", n = 1000, lang = "en", geocode = loc,
                     since = "2022-10-29", until = "2022-10-31")
 L2 <- searchTwitter("korea", n = 1000, lang = "en", geocode = loc,
                     since = "2022-11-01", until = "2022-11-03")
+L3 <- searchTwitter("korea", n = 1000, lang = "en",
+                    since = "2022-11-03", until = "2022-11-06")
+L4 <- searchTwitter("korea", n = 1000, lang = "en",
+                    since = "2022-11-07", until = "2022-11-10")
+
 
 D0 <- twListToDF(L0)%>%
   mutate(timeline = "before")
@@ -66,9 +71,13 @@ D1 <- twListToDF(L1) %>%
   mutate(timeline = "during")
 D2 <- twListToDF(L2) %>%
   mutate(timeline = "after")
+D3 <- twListToDF(L3) %>%
+  mutate(timeline = "after2")
+D4 <- twListToDF(L4) %>%
+  mutate(timeline = "after3")
 
 data <- rbind(D0, D1, D2)
-save_as_csv(data, "Twitter_disaster_1025_1103_K.csv")
+save_as_csv(data, "data/Twitter_disaster_1025_1110.csv")
 
 afinn = get_sentiments("afinn")
 nrc = get_sentiments("nrc")
@@ -123,7 +132,8 @@ for (i in steps){
 
 
 # Results
-Word clouds can help us understand the topic trend in each timeframe. 
+## word clouds
+Word clouds can help us understand the topic trend in each time frame. Also, they can ensure our results reflect the emotion changes are related to the stampede incident on Oct. 29th. Before stampede, keywords mostly used are more positive and more related to the KPOP trend.
 ```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Word cloud before stampede"}
 wordcloud(words = dfbefore$word,
           freq = dfbefore$freq, min.freq = 1,
@@ -131,6 +141,7 @@ wordcloud(words = dfbefore$word,
           colors=brewer.pal(8, "Dark2"))
 ```
 
+During Oct. 29th and Nov. 1st, it is obvious that people mentioned "south" more often, which might represent **south korea**. This figure indicates that people mentioned **itaewon**, **tragedy**,  and other words related to the stampede incident.
 ```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Word cloud during stampede"}
 wordcloud(words = dfduring$word,
           freq = dfduring$freq, min.freq = 1,
@@ -138,6 +149,7 @@ wordcloud(words = dfduring$word,
           colors=brewer.pal(8, "Dark2"))
 ```
 
+After disaster, people mentioned **north**, **missile**, and **ballistic** more often, which means people started to change their focus on the stampede incident.
 ```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Word cloud during stampede"}
 wordcloud(words = dfafter$word,
           freq = dfafter$freq, min.freq = 1,
@@ -145,10 +157,10 @@ wordcloud(words = dfafter$word,
           colors=brewer.pal(8, "Dark2"))
 ```
 
-
-OK we are here.
-
-```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Sentiment before stampede"}
+## emotion analysis
+OK  I am tired so I am gonna stop here.
+<TO BE ADDED>
+```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Emotion before stampede"}
 dfbefore %>%
   inner_join(nrc) %>%
   mutate(temp = freq) %>%
@@ -166,7 +178,7 @@ dfbefore %>%
        y = NULL)
 ```
 
-```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Sentiment before stampede"}
+```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Emotion during stampede"}
 dfduring %>%
   inner_join(nrc) %>%
   mutate(temp = freq) %>%
@@ -184,7 +196,7 @@ dfduring %>%
        y = NULL)
 ```
 
-```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Sentiment before stampede"}
+```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Emotion after stampede"}
 dfafter %>%
   inner_join(nrc) %>%
   mutate(temp = freq) %>%
@@ -202,9 +214,9 @@ dfafter %>%
        y = NULL)
 ```
 
-
+## Resilience score
 Oh wait we have more?!!!
-
+<TO BE ADDED>
 ```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Social resilience"}
 dfbefore <- dfbefore %>%
   inner_join(afinn) %>%
@@ -242,8 +254,11 @@ ggplot(trend, aes(x= factor(names,level = c("before", "during", "3D-after", "6D-
 
 Clear summary adequately describing the results and putting them in context. Discussion of further questions and ways to continue investigation.
 
+<TO BE ADDED>
+
 # References
 Remember to change this part to correct format
+<TO BE ADDED>
 
 * https://www.rdocumentation.org/packages/maps/versions/3.4.0/topics/world.cities
 * http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know
