@@ -12,7 +12,7 @@ Disasters, such as storms, wildfires, and crowd stampede, occur and threaten hum
 ## Data
 * Twitter API: TWitter allows every Twitter user to access tweets from the world within 1 week. Because accessing data requires user token and secret, this data is stored as .csv file to protect user's privacy. we collect data from Oct. 24 to Nov. 10. nearby Korea and Japan.
 * City coordinates: maps database provide the coordinate of each city, it also includes the information of name and populations.
-* Sentiment dictionaries:tidytext library provide the dictionaries with emotion information. *afinn*, and *nrc* are used in this project.
+* Sentiment dictionaries: tidytext library provide the dictionaries with emotion information. *afinn*, and *nrc* are used in this project.
 
 
 Here are the libraries used in this project.
@@ -92,10 +92,11 @@ point <- st_as_sf(data, coords = c("longitude", "latitude"), crs = 4326)
 data(world.cities)
 seoul <- world.cities %>%
   filter(name == 'Seoul')%>%
-  st_as_sf(coords = c("long", "lat"), crs = 4326)%>%
+  st_as_sf(coords = c("long", "lat"), crs = 4326)
+seoul_buffer <- seoul %>%
   st_buffer(dist = 120000)
 
-data <- st_intersection(point, seoul)
+data <- st_intersection(point, seoul_buffer)
 ```
  
 Finally, we introduced sentiment dictionaries. 
@@ -104,6 +105,18 @@ afinn = read.csv("data/afinn.csv")
 nrc = read.csv("data/nrc.csv")
 ```
 
+The data we use in this project was collected within this area.
+```{r, message=F, warning=F}
+data(world)
+asia <- world %>%
+  filter(subregion == "Eastern Asia") %>%
+  st_transform(crs = 4326)
+
+ggplot()+
+  geom_sf(data = asia, fill = "grey60")+
+  geom_sf(data = seoul_buffer, fill = 'blue')+
+  geom_sf(data = seoul, fill = "red")
+```
 
 ## Data processing
 To understand topic, keywords, and sentiment changes in tweets, tweets are sliced into words, and the frequency of each word using is calculated. Numbers, special characters, and spaces are removed from the analysis. Also, because all the tweets mention "korea", we removed the word "korea" from analysis.
@@ -150,7 +163,7 @@ wordcloud(words = dfduring$word,
 ```
 
 After disaster, people mentioned **north**, **missile**, and **ballistic** more often, which means people started to change their focus on the stampede incident.
-```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Word cloud during stampede"}
+```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Word cloud after stampede"}
 wordcloud(words = dfafter$word,
           freq = dfafter$freq, min.freq = 1,
           max.words=200, random.order=FALSE, rot.per=0.35,
@@ -158,8 +171,7 @@ wordcloud(words = dfafter$word,
 ```
 
 ## emotion analysis
-OK  I am tired so I am gonna stop here.
-<TO BE ADDED>
+Before the disaster, the words people used shows more characters with positive emotions, such as *joy*.
 ```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Emotion before stampede"}
 dfbefore %>%
   inner_join(nrc) %>%
@@ -174,10 +186,12 @@ dfbefore %>%
   ggplot(aes(freq, word, fill = sentiment)) +
   geom_col(show.legend = FALSE) +
   facet_wrap(~sentiment, scales = "free_y") +
-  labs(x = "Contribution to sentiment",
-       y = NULL)
+  labs(x = "Contribution to sentiment(before disaster)",
+       y = NULL)+
+  xlim(0, 200)
 ```
 
+Right after disaster happened, the words people used shows more characters with negative emotions, such as *fear*, *sadness*, and *disgust*.
 ```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Emotion during stampede"}
 dfduring %>%
   inner_join(nrc) %>%
@@ -192,16 +206,18 @@ dfduring %>%
   ggplot(aes(freq, word, fill = sentiment)) +
   geom_col(show.legend = FALSE) +
   facet_wrap(~sentiment, scales = "free_y") +
-  labs(x = "Contribution to sentiment",
-       y = NULL)
+  labs(x = "Contribution to sentiment(during disaster)",
+       y = NULL)+
+  xlim(0, 200)
 ```
 
+After disaster, the words people used shows more characters with positive emotion, however, the *fear* emotion is strong.
 ```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Emotion after stampede"}
 dfafter %>%
   inner_join(nrc) %>%
   mutate(temp = freq) %>%
   mutate(temp2 = sentiment) %>%
-  pivot_wider(names_from = temp2, values_from = temp, values_fill = 0) %>% 
+  pivot_wider(names_from = temp2, values_from = temp, values_fill = 0) %>%
   mutate(score = positive - negative) %>%
   group_by(sentiment) %>%
   slice_max(order_by = freq, n = 10) %>% 
@@ -210,13 +226,13 @@ dfafter %>%
   ggplot(aes(freq, word, fill = sentiment)) +
   geom_col(show.legend = FALSE) +
   facet_wrap(~sentiment, scales = "free_y") +
-  labs(x = "Contribution to sentiment",
-       y = NULL)
+  labs(x = "Contribution to sentiment(after disaster)",
+       y = NULL)+
+  xlim(0,200)
 ```
 
 ## Resilience score
-Oh wait we have more?!!!
-<TO BE ADDED>
+During the disaster, the emotion score dropped significantly. 6 days after the disaster, emotion score bounced back to the level of before disaster.
 ```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Social resilience"}
 dfbefore <- dfbefore %>%
   inner_join(afinn) %>%
