@@ -196,12 +196,9 @@ Before the disaster, the words people used shows more characters with positive e
 ```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Emotion before stampede"}
 dfbefore %>%
   inner_join(nrc) %>%
-  mutate(temp = freq) %>%
-  mutate(temp2 = sentiment) %>%
-  pivot_wider(names_from = temp2, values_from = temp, values_fill = 0) %>% 
-  mutate(score = positive - negative) %>%
   group_by(sentiment) %>%
-  slice_max(order_by = freq, n = 10) %>% 
+  arrange(desc(freq)) %>%
+  slice(1:10) %>%
   ungroup() %>%
   mutate(word = reorder(word, freq)) %>%
   ggplot(aes(freq, word, fill = sentiment)) +
@@ -209,19 +206,16 @@ dfbefore %>%
   facet_wrap(~sentiment, scales = "free_y") +
   labs(x = "Contribution to sentiment(before disaster)",
        y = NULL)+
-  xlim(0, 200)
+  xlim(0, 202)
 ```
 
 Right after disaster happened, the words people used shows more characters with negative emotions, such as *fear*, *sadness*, and *disgust*.
 ```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Emotion during stampede"}
 dfduring %>%
   inner_join(nrc) %>%
-  mutate(temp = freq) %>%
-  mutate(temp2 = sentiment) %>%
-  pivot_wider(names_from = temp2, values_from = temp, values_fill = 0) %>% 
-  mutate(score = positive - negative) %>%
   group_by(sentiment) %>%
-  slice_max(order_by = freq, n = 10) %>% 
+  arrange(desc(freq)) %>%
+  slice(1:10) %>%
   ungroup() %>%
   mutate(word = reorder(word, freq)) %>%
   ggplot(aes(freq, word, fill = sentiment)) +
@@ -229,19 +223,16 @@ dfduring %>%
   facet_wrap(~sentiment, scales = "free_y") +
   labs(x = "Contribution to sentiment(during disaster)",
        y = NULL)+
-  xlim(0, 200)
+  xlim(0, 100)
 ```
 
 After disaster, the words people used shows more characters with positive emotion, however, the *fear* emotion is strong.
 ```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Emotion after stampede"}
 dfafter %>%
   inner_join(nrc) %>%
-  mutate(temp = freq) %>%
-  mutate(temp2 = sentiment) %>%
-  pivot_wider(names_from = temp2, values_from = temp, values_fill = 0) %>%
-  mutate(score = positive - negative) %>%
   group_by(sentiment) %>%
-  slice_max(order_by = freq, n = 10) %>% 
+  arrange(desc(freq)) %>%
+  slice(1:10) %>% 
   ungroup() %>%
   mutate(word = reorder(word, freq)) %>%
   ggplot(aes(freq, word, fill = sentiment)) +
@@ -249,7 +240,7 @@ dfafter %>%
   facet_wrap(~sentiment, scales = "free_y") +
   labs(x = "Contribution to sentiment(after disaster)",
        y = NULL)+
-  xlim(0,200)
+  xlim(0,100)
 ```
 
 ## Resilience score
@@ -293,17 +284,10 @@ ggplot(trend, aes(x= factor(names,level = c("before", "during", "3D-after", "6D-
 
 # Conclusions
 
-[~200 words]
-
-Clear summary adequately describing the results and putting them in context. Discussion of further questions and ways to continue investigation.
-
-<TO BE ADDED>
+This project illustrates the social resilience after stampede disaster on Oct. 29th.  The topic trends on Twitter changed rapidly, meaning that people's focus changed much faster than we expected. In addition, by combining sentiment dictionaries with Twitter data, we can observe the public emotion. Before stampede, public emotion was strongly positive, words with joy emotion were frequently used. In the first three days after disaster, people focused on the stampede incident, and words with negative emotions, such as fear, sadness, and disgust are more widely used. After disaster, the positive words are more frequently used than during disaster. 
+Emotion score shows public emotion changes and social resilience. Before stampede, the emotion score was nearly +1000. Between Oct. 29th to Nov. 1st, the emotion score dropped significantly, with the score of -1250. After disaster, the emotion score slowly increased and showed a steady positive trend 6 days after disaster. The results show the social emotion score bounce back after 6 days after stampede although the disaster traumatize the society.
 
 # References
-Remember to change this part to correct format
-<TO BE ADDED>
-
 * https://www.rdocumentation.org/packages/maps/versions/3.4.0/topics/world.cities
 * http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know
-* https://www.tidytextmining.com/sentiment.html
 * https://posit.co/blog/the-r-markdown-cheat-sheet/
