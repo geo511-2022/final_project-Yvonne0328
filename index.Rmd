@@ -273,14 +273,16 @@ dfafter3 <- dfafter3 %>%
 dfafter4 <- dfafter4 %>%
   inner_join(afinn) %>%
   mutate(score = freq*value)
+dfafter5 <- inner_join(dfafter5, afinn, by = "word")%>%
+  mutate(score = freq*value)
 
 SCORE  <- c(sum(dfbefore$score), sum(dfduring$score), sum(dfafter$score),sum(dfafter2$score),sum(dfafter3$score),
-            sum(dfafter4$score))
-timeframe <- c("-1", "0", "1", "2", "3", "4")
-names <- c("before", "during", "3D-after", "6D-after", "9D-after", "12D-after")
+            sum(dfafter4$score), sum(dfafter5$score))
+timeframe <- c("-1", "0", "1", "2", "3", "4", "5")
+names <- c("before", "during", "3D-after", "6D-after", "9D-after", "12D-after", "15D-after")
 trend <- data.frame(names, timeframe, SCORE)
 
-ggplot(trend, aes(x= factor(names,level = c("before", "during", "3D-after", "6D-after", "9D-after", "12D-after")), SCORE, group = 1))+
+ggplot(trend, aes(x= factor(names,level = c("before", "during", "3D-after", "6D-after", "9D-after", "12D-after", "15D-after")), SCORE, group = 1))+
   geom_line(arrow = arrow())+
   geom_point()+
   xlab("timeline")+
