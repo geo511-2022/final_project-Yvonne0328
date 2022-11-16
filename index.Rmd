@@ -67,6 +67,7 @@ L5 <- searchTwitter("korea", n = 1000, lang = "en",
                     since = "2022-11-09", until = "2022-11-12")
 L6 <- searchTwitter("korea", n = 1000, lang = "en",
                     since = "2022-11-12", until = "2022-11-15")
+...
 
 
 D0 <- twListToDF(L0)%>%
@@ -82,7 +83,9 @@ D4 <- twListToDF(L4) %>%
 D5 <- twListToDF(L5) %>%
   mutate(timeline = "after4")
 D6 <- twListToDF(L6) %>%
-  mutate(timeline = "after4")
+  mutate(timeline = "after5")
+...
+
 
 data <- rbind(D0, D1, D2)
 save_as_csv(data, "XXX.csv")
@@ -93,7 +96,7 @@ save_as_csv(afinn, "data/affin.csv")
 save_as_csv(nrc, "data/nrc.csv")
 ```
 
-A csv file (Twitter data) and Seoul location is read. Tweets locate nearby Seoul within 120 km are remained.
+A csv file (Twitter data) and Seoul location is read. Tweets locate nearby Seoul within 120 km are remained. Also, emojis and links are removed from the text.
 ```{r, message=F, warning=F}
 data <- read.csv("data/Twitter_disaster_1025_1115.csv")
 point <- st_as_sf(data, coords = c("longitude", "latitude"), crs = 4326)
@@ -105,6 +108,9 @@ seoul_buffer <- seoul %>%
   st_buffer(dist = 120000)
 
 data <- st_intersection(point, seoul_buffer)
+
+data$text = gsub(" ?(f|ht)tp(s?)://(.*)[.][a-z]+", "", data$text)
+data$text = gsub("[^\x01-\x7F]", "", data$text)
 ```
  
 Finally, we introduced sentiment dictionaries. 
@@ -147,10 +153,9 @@ for (i in steps){
   dtm <- TermDocumentMatrix(docs_data) 
   matrix <- as.matrix(dtm) 
   words <- sort(rowSums(matrix),decreasing=TRUE) 
-  df_data <- data.frame(word = names(words),freq=words) %>%
-    filter(word != "korea")
+  df_data <- data.frame(word = names(words),freq=words)
   assign(paste0("df", i), df_data)
-  }
+}
 ```
 
 
@@ -158,6 +163,8 @@ for (i in steps){
 ## word clouds
 Word clouds can help us understand the topic trend in each time frame. Also, they can ensure our results reflect the emotion changes are related to the stampede incident on Oct. 29th. Before stampede, keywords mostly used are more positive and more related to the KPOP trend.
 ```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Word cloud before stampede"}
+dfbefore <- dfbefore %>%
+  filter(word != "korea")
 wordcloud(words = dfbefore$word,
           freq = dfbefore$freq, min.freq = 1,
           max.words=200, random.order=FALSE, rot.per=0.35,
@@ -166,6 +173,8 @@ wordcloud(words = dfbefore$word,
 
 During Oct. 29th and Nov. 1st, it is obvious that people mentioned "south" more often, which might represent **south korea**. This figure indicates that people mentioned **itaewon**, **tragedy**,  and other words related to the stampede incident.
 ```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Word cloud during stampede"}
+dfduring <- dfduring %>%
+  filter(word != "korea")
 wordcloud(words = dfduring$word,
           freq = dfduring$freq, min.freq = 1,
           max.words=200, random.order=FALSE, rot.per=0.35,
@@ -174,6 +183,8 @@ wordcloud(words = dfduring$word,
 
 After disaster, people mentioned **north**, **missile**, and **ballistic** more often, which means people started to change their focus on the stampede incident.
 ```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Word cloud after stampede"}
+dfafter <- dfafter %>%
+  filter(word != "korea")
 wordcloud(words = dfafter$word,
           freq = dfafter$freq, min.freq = 1,
           max.words=200, random.order=FALSE, rot.per=0.35,
@@ -262,17 +273,14 @@ dfafter3 <- dfafter3 %>%
 dfafter4 <- dfafter4 %>%
   inner_join(afinn) %>%
   mutate(score = freq*value)
-dfafter5 <- dfafter5 %>%
-  inner_join(afinn) %>%
-  mutate(score = freq*value)
 
 SCORE  <- c(sum(dfbefore$score), sum(dfduring$score), sum(dfafter$score),sum(dfafter2$score),sum(dfafter3$score),
-            sum(dfafter4$score), sum(dfafter5$score))
-timeframe <- c("-1", "0", "1", "2", "3", "4", "5")
-names <- c("before", "during", "3D-after", "6D-after", "9D-after", "12D-after", "15D-after")
+            sum(dfafter4$score))
+timeframe <- c("-1", "0", "1", "2", "3", "4")
+names <- c("before", "during", "3D-after", "6D-after", "9D-after", "12D-after")
 trend <- data.frame(names, timeframe, SCORE)
 
-ggplot(trend, aes(x= factor(names,level = c("before", "during", "3D-after", "6D-after", "9D-after", "12D-after", "15D-after")), SCORE, group = 1))+
+ggplot(trend, aes(x= factor(names,level = c("before", "during", "3D-after", "6D-after", "9D-after", "12D-after")), SCORE, group = 1))+
   geom_line(arrow = arrow())+
   geom_point()+
   xlab("timeline")+

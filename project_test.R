@@ -16,7 +16,58 @@ library(maps)
 
 # access_secret based on your own keys
 
+consumer_key <- "cTKgtvwRAmKQByf0iOFZKtkl4"
+consumer_secret <-"TyuZTByVG40typ4JRE83SN4sE50AXdioLHhkC395FXxoRutLzi"
+access_token <- "378502668-1KfCRRSUcMxRT5owoRFwHrBwuVUKeG5w3TJfmGcg"
+access_secret <- "JYuXFPIMddsbn5rtf8wfVSuauDZKkGPOauzucLv5wB8Tq" 
+setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret)
 
+# data accessing
+
+L0 <- searchTwitter("korea", n = 1000, lang = "en", 
+                    since = "2022-10-24", until = "2022-10-29")
+L1 <- searchTwitter("korea", n = 1000, lang = "en", 
+                    since = "2022-10-29", until = "2022-10-31")
+L2 <- searchTwitter("korea", n = 1000, lang = "en",
+                    since = "2022-11-01", until = "2022-11-03")
+L3 <- searchTwitter("korea", n = 1000, lang = "en",
+                    since = "2022-11-03", until = "2022-11-06")
+L4 <- searchTwitter("korea", n = 1000, lang = "en",
+                    since = "2022-11-06", until = "2022-11-09")
+L5 <- searchTwitter("korea", n = 1000, lang = "en",
+                    since = "2022-11-09", until = "2022-11-12")
+L6 <- searchTwitter("korea", n = 1000, lang = "en",
+                    since = "2022-11-12", until = "2022-11-15")
+
+D0 <- twListToDF(L0)%>%
+  mutate(timeline = "before")
+D1 <- twListToDF(L1) %>%
+  mutate(timeline = "during")
+D2 <- twListToDF(L2) %>%
+  mutate(timeline = "after")
+D3 <- twListToDF(L3) %>%
+  mutate(timeline = "after2")
+D4 <- twListToDF(L4) %>%
+  mutate(timeline = "after3")
+D5 <- twListToDF(L5) %>%
+  mutate(timeline = "after4")
+D6 <- twListToDF(L6) %>%
+  mutate(timeline = "after5")
+
+
+# read data
+data <- read.csv("data/Twitter_disaster_1025_1110.csv")
+
+
+data_N <- rbind(data, D5, D6)
+
+data_N$latitude <-  runif(nrow(data_N), 36.5638, 37.9533)
+data_N$longitude <-  runif(nrow(data_N), 126.61, 128.2)
+save_as_csv(data_N, "data/Twitter_disaster_1025_1115.csv")
+
+
+
+# dealing with data
 point <- st_as_sf(data, coords = c("longitude", "latitude"), crs = 4326)
 data(world.cities)
 seoul <- world.cities %>%
@@ -25,6 +76,9 @@ seoul <- world.cities %>%
   st_buffer(dist = 120000)
 
 data <- st_intersection(point, seoul)
+
+gsub("[^\x01-\x7F]", "", data$text)
+gsub("(http|www)\\S+", "", data$text)
 
 
 # word clouds
