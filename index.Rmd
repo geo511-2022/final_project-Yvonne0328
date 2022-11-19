@@ -6,7 +6,7 @@ subtitle: Emotional changes -- stampede in Itaewon
 
 # Introduction
 
-Disasters, such as storms, wildfires, and crowd stampede, occur and threaten human's physical and mental health. It is important to estimate social resilience because it represents population mental health. Therefore, understanding how people react and how their emotion changes toward disasters would be a crucial factor when analyzing social resilience. Twitter API allow users to access tweets within a week. Therefore, in this project, we collected tweets from different time frames, including before, during, and after disaster happened. To evaluate social resilience, Twitter data is used to produce social resilience index and analyze population emotion changes in a lexicon based sentiment analysis, which means that the categorizing is based on sentiment dictionaries. The trend of sentiment emotion score changes is the symbol of social resilience. This project focused on analyzing people's emotional changes toward a crowd stampede incident in Itaewon, Seoul, South Korea on October 29, 2022. 
+Disasters, such as storms, wildfires, and crowd stampede, occur and threaten human's physical and mental health. It is important to estimate social resilience because it represents population mental health. Therefore, understanding how people react and how their emotion changes toward disasters would be a crucial factor when analyzing social resilience. Twitter API allow users to access tweets within a week. Therefore, in this project, we collected tweets from different time frames, including before, during, and after disaster happened. To evaluate social resilience, Twitter data is used to produce social resilience index and analyze population emotion changes in a lexicon based sentiment analysis, which means that the categorizing is based on sentiment dictionaries. The trend of sentiment emotion score changes is the symbol of social resilience. This project focused on analyzing people's emotional changes toward a crowd stampede incident in Itaewon, Seoul, South Korea on October 29, 2022.  
 
 # Materials and methods
 ## Data
@@ -160,7 +160,7 @@ for (i in steps){
 
 
 # Results
-## word clouds
+## word clouds 
 Word clouds can help us understand the topic trend in each time frame. Also, they can ensure our results reflect the emotion changes are related to the stampede incident on Oct. 29th. Before stampede, keywords mostly used are more positive and more related to the KPOP trend.
 ```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Word cloud before stampede"}
 dfbefore <- dfbefore %>%
@@ -191,7 +191,7 @@ wordcloud(words = dfafter$word,
           colors=brewer.pal(8, "Dark2"))
 ```
 
-## emotion analysis
+## emotion analysis 
 Before the disaster, the words people used shows more characters with positive emotions, such as *joy*.
 ```{r, message=F, warning=F, fig.width=8, fig.height=6, fig.cap="Emotion before stampede"}
 dfbefore %>%
