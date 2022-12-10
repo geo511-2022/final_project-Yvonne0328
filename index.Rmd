@@ -248,7 +248,7 @@ During the disaster, the emotion score dropped significantly. 6 days after the d
 ```{r, message=F, warning=F, fig.width=6, fig.height=3, fig.cap="Social resilience"}
 dfbefore <- dfbefore %>%
   inner_join(afinn) %>%
-  mutate(score = freq*value)
+  mutate(score = freq*value) 
 dfduring <- dfduring %>%
   inner_join(afinn) %>%
   mutate(score = freq*value)
